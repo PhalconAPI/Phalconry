@@ -1,4 +1,7 @@
 {
+  "autoload": {
+    "psr-4": {"Phalconry\\": "src/"}
+  },
   "name":         "PhalconAPI/Phalconry",
   "require":      {
     "agmakonts/stl":        "1.*"
