@@ -1,5 +1,5 @@
 {
-  "name":         "PhalconAPI/Phalconary",
+  "name":         "PhalconAPI/Phalconry",
   "require":      {
     "agmakonts/stl":        "1.*"
   }
