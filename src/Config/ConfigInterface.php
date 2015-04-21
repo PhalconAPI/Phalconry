@@ -1,12 +1,13 @@
 <?php
 /**
- * Created by IntelliJ IDEA.
- * User: Radek Adamiec <radek@adamiec.it>
+ *
+ * @author Radek Adamiec
  * Date: 14.04.15
  * Time: 13:10
  */
 
 namespace Phalconry\Config;
+
 
 /**
  * Interface ConfigInterface
@@ -14,5 +15,14 @@ namespace Phalconry\Config;
  * @package Phalconry\Config
  */
 interface ConfigInterface {
+
+    /**
+     * @return array
+     */
     public function getRoutes();
+
+    /**
+     * @return \AGmakonts\STL\String\String
+     */
+    public function getResourcesDir();
 }

@@ -1,7 +1,7 @@
 <?php
 /**
- * Created by IntelliJ IDEA.
- * User: Radek Adamiec <radek@adamiec.it>
+ *
+ * @author Radek Adamiec
  * Date: 14.04.15
  * Time: 13:08
  */
@@ -10,58 +10,117 @@ namespace Phalconry\Service;
 
 
 use AGmakonts\STL\String\String;
+use Phalcon\DiInterface;
 use Phalcon\Http\Request;
+use Phalcon\Loader;
 use Phalcon\Mvc\Router as PhalconRouter;
-use Phalconry\Config\Config;
+use Phalcon\Mvc\Router;
+use Phalconry\Config\ConfigInterface;
+use Phalconry\Controller\PhalconryController;
+use Phalconry\Helper\RequestHelper;
 
 class PhalconryAPI
 {
 
+    const NAMESPACE_RESOURCE_PREFIX = 'Phalconry\Rest';
+
+    private $config;
+
     /**
+     *
      * Constructor is deciding whether or not API module should be initialized
      *
-     * @param \Phalconry\Config\Config $config
+     *
+     * @param \Phalconry\Config\ConfigInterface $config
+     * @param \Phalcon\DiInterface              $di
      */
-    public function __construct(Config $config)
+    public function __construct(ConfigInterface $config, DiInterface $di)
     {
-        $request     = new Request();
-        $method      = $request->getMethod();
-        $contentType = String::get($request->getHeader('CONTENT_TYPE'));
-        $accept      = String::get($request->getHeader('ACCEPT'));
-        switch ($method) {
-            case 'GET':
-                // If HTTP method is GET then we need to check also ACCEPT header. It is because some JS frameworks
-                // strip header Content-Type
-                if (TRUE === $this->checkIfApiCall($contentType) || TRUE === $this->checkIfApiCall($accept)) {
-                    $this->registerApi($config);
-                }
-                break;
-            default:
-                if ($this->checkIfApiCall($contentType)) {
-                    $this->registerApi($config);
-                }
-                break;
+        $this->config = $config;
+
+        $request = $di->get('request');
+        $router  = $di->get('router');
+
+
+        try {
+            $contentType = RequestHelper::getContentTypeFromRequest($request);
+        } catch (\Exception $exception) {
+            return;
         }
+
+        if ( FALSE == $this->checkIfApiCall($contentType) ) {
+            return;
+        }
+
+        $this->registerApiRoutes($router);
+        $this->registerResourceNamespace($config->getResourcesDir());
+
+        $di->set(
+            'PhalconryController',
+            function () use ($request, $di) {
+                $controller = new PhalconryController(
+                    $request, String::get($di->get('router')->getRewriteUri())
+                );
+
+                return $controller;
+            }
+        );
     }
 
 
     /**
      * Check if this is api call.
-     * @param \AGmakonts\STL\String\String $header
+     *
+     * @param \AGmakonts\STL\String\String $contentType
      *
      * @return bool
      */
-    private function checkIfApiCall(String $header)
+    private function checkIfApiCall(String $contentType)
     {
-        return (strpos($header->value(), 'application/hal') !== FALSE);
+        return ((strpos($contentType->value(), 'application/vnd') !== FALSE) ||
+            (strpos($contentType->value(), 'application/hal') !== FALSE));
     }
 
 
     /**
      * Register routes and callback for them.
-     * @param \Phalconry\Config\Config $config
+     *
+     * @param \Phalcon\Mvc\Router $router
      */
-    private function registerApi(Config $config)
+    private function registerApiRoutes(Router $router)
     {
+        /* @var $router \Phalcon\Mvc\Router */
+
+        $routes = $this->config->getRoutes();
+        foreach ($routes as $route) {
+
+            $router->add(
+                '/' . ltrim($route, '/'),
+                [
+                    'controller' => 'Phalconry',
+                    'action'     => 'handleRequest',
+                    'id'         => -1,
+                ]
+            );
+            $router->add(
+                '/' . ltrim($route, '/') . "/([a-zA-Z0-9]+)",
+                [
+                    'controller' => 'Phalconry',
+                    'action'     => 'handleRequest',
+                    'id'         => 1,
+                ]
+            );
+        }
+    }
+
+    private function registerResourceNamespace(String $resourceDir)
+    {
+        $loader = new Loader();
+        $loader->registerNamespaces(
+            [
+                self::NAMESPACE_RESOURCE_PREFIX => $resourceDir->value(),
+            ]
+        );
+        $loader->register();
     }
 }
