@@ -57,9 +57,9 @@ class PhalconryAPI
 
         $di->set(
             'PhalconryController',
-            function () use ($request, $di) {
+            function () use ($request, $router) {
                 $controller = new PhalconryController(
-                    $request, String::get($di->get('router')->getRewriteUri())
+                    $request, String::get($router->getRewriteUri())
                 );
 
                 return $controller;
