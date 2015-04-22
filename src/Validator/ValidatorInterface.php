@@ -8,10 +8,11 @@
 
 namespace Phalconry\Validator;
 
-interface ValidatorInterface {
+interface ValidatorInterface
+{
 
     /**
-     * @return mixed
+     * @return AbstractValidator
      */
-    public function getValidators();
+    public function getJsonValidator();
 }

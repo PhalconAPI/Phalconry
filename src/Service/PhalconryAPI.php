@@ -12,12 +12,15 @@ namespace Phalconry\Service;
 use AGmakonts\STL\String\String;
 use Phalcon\DiInterface;
 use Phalcon\Http\Request;
+use Phalcon\Http\Response;
 use Phalcon\Loader;
 use Phalcon\Mvc\Router as PhalconRouter;
 use Phalcon\Mvc\Router;
 use Phalconry\Config\ConfigInterface;
 use Phalconry\Controller\PhalconryController;
+use Phalconry\Helper\ExceptionResponseConverter;
 use Phalconry\Helper\RequestHelper;
+use Phalconry\Request\PhalconryRestRequest;
 
 class PhalconryAPI
 {
@@ -38,28 +41,32 @@ class PhalconryAPI
     {
         $this->config = $config;
 
+        /* @var $request Request */
         $request = $di->get('request');
         $router  = $di->get('router');
 
+        if ( FALSE == $this->checkIfApiCall($request) ) {
+            return;
+        }
 
         try {
-            $contentType = RequestHelper::getContentTypeFromRequest($request);
+            $phalconryRequest = new PhalconryRestRequest($request);
         } catch (\Exception $exception) {
-            return;
+            $response = new Response($exception->getMessage(), $exception->getCode());
+            $response->send();
+
         }
 
-        if ( FALSE == $this->checkIfApiCall($contentType) ) {
-            return;
-        }
+
 
         $this->registerApiRoutes($router);
         $this->registerResourceNamespace($config->getResourcesDir());
 
         $di->set(
             'PhalconryController',
-            function () use ($request, $router) {
+            function () use ($phalconryRequest, $router) {
                 $controller = new PhalconryController(
-                    $request, String::get($router->getRewriteUri())
+                    $phalconryRequest, String::get($router->getRewriteUri())
                 );
 
                 return $controller;
@@ -69,14 +76,19 @@ class PhalconryAPI
 
 
     /**
-     * Check if this is api call.
-     *
-     * @param \AGmakonts\STL\String\String $contentType
+     * @param \Phalcon\Http\Request $request
      *
      * @return bool
      */
-    private function checkIfApiCall(String $contentType)
+    private function checkIfApiCall(Request $request)
     {
+        if(String::get('GET') === String::get($request->getMethod())){
+            $contentType = String::get((string)$request->getHeader('ACCEPT'));
+        }else{
+            $contentType = String::get((string)$request->getHeader('CONTENT_TYPE'));
+        }
+
+
         return ((strpos($contentType->value(), 'application/vnd') !== FALSE) ||
             (strpos($contentType->value(), 'application/hal') !== FALSE));
     }

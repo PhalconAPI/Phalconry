@@ -77,4 +77,12 @@ abstract class AbstractResource {
     public function deleteList(){
         throw new \BadMethodCallException('This method is not allowed', 403);
     }
+
+
+    /**
+     * TODO
+     */
+    public function options(){
+        return;
+    }
 }

@@ -1,0 +1,24 @@
+return [
+    //Directory with resources(optional, default is dir with config)
+    'resourceDir'=>NULL,
+    'apis' => [
+        //Api name
+        'api' => [
+            //Api version
+            'V1' => [
+                //Resource name
+                'some-resource' => [
+                    //Method name
+                    'GET' => [
+                        //Optional validator class name. If not present then default validator will be taken.
+                        'validator'     => NULL,
+                        //Same as validator
+                        'filter'        => NULL,
+                        //Define if this resource needs authorization
+                        'authorization' => FALSE,
+                    ],
+                ],
+            ],
+        ],
+    ],
+];

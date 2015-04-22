@@ -11,17 +11,10 @@ namespace Phalconry\Filter;
 interface FilterInterface {
 
     /**
-     * Return filters for request
+     * This method should return JsonFilter object
      *
-     * @return array
      *
-     * <code>
-     * return [
-     *    'name'=>['string'],
-     *    'screen_name'=>['string', function($value){ return str_replace(' ', '_', $value); }
-     * ]
-     *
-     * </code>
+     * @return JsonFilter
      */
-    public function getFilters();
+    public function getJsonFilter();
 }
