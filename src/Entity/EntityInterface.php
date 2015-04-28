@@ -8,10 +8,14 @@
 namespace Phalconry\Entity;
 
 
-interface EntityInterface {
+use Phalconry\Resource\ResourceResult;
+
+interface EntityInterface extends ResourceResult{
 
     /**
+     * @param $model
+     *
      * @return array
      */
-    public function getEntity();
+    public function getEntity($model);
 }

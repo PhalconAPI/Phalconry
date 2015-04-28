@@ -12,7 +12,7 @@ interface ValidatorInterface
 {
 
     /**
-     * @return AbstractValidator
+     * @return PhalconryValidator
      */
-    public function getJsonValidator();
+    public function getValidator();
 }

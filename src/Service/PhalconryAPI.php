@@ -58,7 +58,6 @@ class PhalconryAPI
         }
 
 
-
         $this->registerApiRoutes($router);
         $this->registerResourceNamespace($config->getResourcesDir());
 
@@ -125,6 +124,13 @@ class PhalconryAPI
         }
     }
 
+    /**
+     *
+     * Register namespace with resources
+     *
+     * @param \AGmakonts\STL\String\String $resourceDir
+     *
+     */
     private function registerResourceNamespace(String $resourceDir)
     {
         $loader = new Loader();

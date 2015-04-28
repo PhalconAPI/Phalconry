@@ -11,10 +11,10 @@ namespace Phalconry\Filter;
 interface FilterInterface {
 
     /**
-     * This method should return JsonFilter object
+     * This method should return PhalconryFilter object
      *
      *
-     * @return JsonFilter
+     * @return \Phalconry\Filter\PhalconryFilter
      */
-    public function getJsonFilter();
+    public function getFilter();
 }

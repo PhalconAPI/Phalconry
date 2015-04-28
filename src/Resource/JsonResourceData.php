@@ -10,8 +10,8 @@ namespace Phalconry\Resource;
 
 use AGmakonts\STL\String\String;
 use Phalcon\Filter;
-use Phalconry\Filter\FilterInterface;
-use Phalconry\Validator\ValidatorInterface;
+use Phalconry\Filter\PhalconryFilter;
+use Phalconry\Validator\PhalconryValidator;
 
 class JsonResourceData
 {
@@ -20,11 +20,6 @@ class JsonResourceData
      * @var \stdClass
      */
     private $data;
-
-    /**
-     * @var Filter
-     */
-    private $filter;
 
     /**
      * This object currently supports only json data.
@@ -80,38 +75,37 @@ class JsonResourceData
         return isset($this->data->{$fieldName->value()});
     }
 
-    public function filterData(FilterInterface $filter)
+    /**
+     * @param \Phalconry\Filter\PhalconryFilter $filter
+     */
+    public function filterData(PhalconryFilter $filter)
     {
-        $jsonFiltersObject = $filter->getJsonFilter();
 
-
-        foreach ($jsonFiltersObject->getFilters() as $fieldName) {
+        foreach ($filter->getFilters() as $fieldName) {
             /* @var $fieldName \AGmakonts\STL\String\String */
             if ( FALSE === $this->fieldExist($fieldName) ) {
                 continue;
             }
 
-            /* @var $filters array */
-            $filters = $jsonFiltersObject->getFilters()->offsetGet($fieldName);
 
-            $this->appendFilters($fieldName, $filters);
+            $this->appendFilters($fieldName, $filter);
         }
     }
 
 
     /**
      * @param \AGmakonts\STL\String\String $fieldName
-     * @param array                        $filters
+     * @param PhalconryFilter              $phalconryFilter
      *
      * @return void
      */
-    private function appendFilters(String $fieldName, array $filters)
+    private function appendFilters(String $fieldName, PhalconryFilter $phalconryFilter)
     {
-        foreach ($filters as $filter) {
+        foreach ($phalconryFilter->getFilters()->offsetGet($fieldName) as $filter) {
             if ( FALSE == function_exists($filter) && TRUE == is_callable($filter) ) {
                 $this->data->{$fieldName->value()} = $filter($this->data->{$fieldName->value()});
             } else {
-                $this->data->{$fieldName->value()} = $this->getFilterObject()->sanitize
+                $this->data->{$fieldName->value()} = $phalconryFilter->sanitize
                 (
                     $this->data->{$fieldName->value()},
                     $filter
@@ -122,19 +116,22 @@ class JsonResourceData
 
 
     /**
-     * @return \Phalcon\Filter
+     * @param \Phalconry\Validator\PhalconryValidator $validator
+     *
+     * @throws \Exception
      */
-    private function getFilterObject()
+    public function validateData(PhalconryValidator $validator)
     {
-        if ( NULL === $this->filter ) {
-            $this->filter = new Filter();
+        $validationResult = $validator->validate($this->data);
+        if(TRUE === $validationResult->count()>0){
+            $error = "";
+            foreach($validationResult as $message){
+                /* @var $message \Phalcon\Validation\Message */
+                $error .= sprintf('%s: %s, ', $message->getField(), $message->getMessage());
+            }
+            $error = trim($error, ', ');
+            throw new \Exception($error, 400);
         }
 
-        return $this->filter;
-    }
-
-
-    public function validateData(ValidatorInterface $validator)
-    {
     }
 }
